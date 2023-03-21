@@ -6,8 +6,8 @@ warnings.filterwarnings('ignore')
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "tools.txt" # 工具列表文件
-github_token = "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" # GitHub token
-server_key = "SCT201195TyjhBD0akDAc23ma1nOuq2KUz" # server酱的SendKey
+github_token = "xxx" # GitHub token
+server_key = "xxx" # server酱的SendKey
 # -----------------------------------
 
 def create_db():
