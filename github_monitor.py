@@ -6,8 +6,8 @@ warnings.filterwarnings('ignore')
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "tools.txt" # 工具列表文件
-github_token = "xxx" # GitHub token
-server_key = "xxx" # server酱的SendKey
+github_token = "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" # GitHub token
+server_key = "SCT201195TyjhBD0akDAc23ma1nOuq2KUz" # server酱的SendKey
 # -----------------------------------
 
 def create_db():
@@ -85,8 +85,9 @@ def send_server(title,msg):
         print("===========================")
         print(title)
         print(msg)
-        uri = 'https://sc.ftqq.com/{}.send?text={}&desp={}'.format(server_key, title, msg)
-        requests.get(uri)
+        data = {"title":title,"desp":msg}
+        url = 'https://sc.ftqq.com/{}.send'.format(server_key)
+        requests.post(url,data=data)
     except Exception as e:
         print(e)
 
