@@ -29,7 +29,7 @@ def create_db():
                 author varchar(255));''')
         print("工具表创建成功！")
     except Exception as e:
-        print("工具表创建出错啦！报错：",e)
+        print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","工具表创建出错啦！报错：",e)
     conn.commit()
     return c,conn
 
@@ -78,7 +78,7 @@ def get_github_data(url):
         return dic
 
     except Exception as e:
-        print("获取GitHub API数据时出错啦！报错：", e)
+        print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","获取GitHub API数据时出错啦！报错：", e, url)
 
 def send_server(title,msg):
     try:
@@ -89,7 +89,7 @@ def send_server(title,msg):
         url = 'https://sc.ftqq.com/{}.send'.format(server_key)
         requests.post(url,data=data)
     except Exception as e:
-        print(e)
+        print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]",e)
 
 if __name__ == '__main__':
     db,conn = create_db()
