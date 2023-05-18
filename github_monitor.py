@@ -1,13 +1,15 @@
 import sqlite3
-import requests, time, os
+import requests, time, os, json
 import warnings
 warnings.filterwarnings('ignore')
 
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "tools.txt" # 工具列表文件
-github_token = "xxx" # GitHub token
-server_key = "xxx" # server酱的SendKey
+github_token = "" # GitHub token
+server_key = "" # server酱的SendKey
+webhook_key="" # 企业微信机器人key
+send_type = "ServerChan" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)
 # -----------------------------------
 
 def create_db():
@@ -73,43 +75,62 @@ def get_github_data(url):
             dic['releases_time'] = get_timestamp(release_rep[0]['published_at'])
             dic['releases_url'] = release_rep[0]['html_url']
 
-        # print(tools_name,tools_url,html_url,commit_date_timestamp,commit_message,releases,releases_time,releases_url)
-        # print(dic)
         return dic
 
     except Exception as e:
         print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","获取GitHub API数据时出错啦！报错：", e, url)
 
 def send_server(title,msg):
-    try:
-        print("===========================")
-        print(title)
-        print(msg)
-        data = {"title":title,"desp":msg}
-        url = 'https://sc.ftqq.com/{}.send'.format(server_key)
-        requests.post(url,data=data)
-    except Exception as e:
-        print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]",e)
+    print("===========================")
+    print(title)
+    print(msg)
+    if send_type == "ServerChan":
+        if server_key != "":
+            try:
+                data = {"title":title,"desp":msg}
+                url = 'https://sc.ftqq.com/{}.send'.format(server_key)
+                requests.post(url,data=data,verify=False)
+            except Exception as e:
+                print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]",e)
+        else:
+            print('未指定server酱的key，请配置！')
+            exit()
+    elif send_type == "Webhook":
+        if webhook_key != "":
+            try:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36',
+                    'Content-Type': "application/json"
+                }
+                data = {"msgtype": "markdown","markdown": {"content":title + "\n" + ">" + msg}}
+                url = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={}'.format(webhook_key)
+                requests.post(url,headers=headers,json=data,verify=False)
+            except Exception as e:
+                print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]",e)
+        else:
+            print('未指定企业微信机器人的key，请配置！')
+            exit()
+    else:
+        print("指定的推送方式错误！可以选择：ServerChan(server酱）、Webhook(企业微信机器人)推送！")
+        exit()
+
 
 if __name__ == '__main__':
     db,conn = create_db()
     if not os.path.exists(tools_path):
         print("没有找到要监测的工具的列表文件！")
         exit()
-    # print(get_github_data("https://api.github.com/repos/jeroennijhof/vncpwd"))
-    # print(get_github_data("https://api.github.com/repos/x0rz4/vncpwd"))
     while True:
         with open(tools_path,mode='r',encoding='utf-8') as f:
             for i in f:
                 api_url = i.replace('\n','')
                 tools_data = get_github_data(api_url)
-                # 排除工具404的情况
+                # 排除工具404和访问异常的情况
                 if tools_data == None:
                     continue
                 query_sql = "select tools_name,commit_date_timestamp,tools_url,releases,releases_time,author from tools where tools_name='{}' and author='{}'".format(tools_data['tools_name'],tools_data['author'])
                 db.execute(query_sql)
                 query_result = db.fetchall()
-                # print(query_result)
                 if query_result != []:
                     query_result = query_result[0]
                 if not query_result:
