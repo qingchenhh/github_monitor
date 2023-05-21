@@ -53,13 +53,13 @@ def get_github_data(url):
     dic = {}
     try:
         rep1 = requests.get(url, headers=headers, verify=False).json()
-        time.sleep(2)
+        time.sleep(1.5)
         # print(rep1)
         dic['tools_name'] = rep1['name']
         dic['tools_url'] = rep1['html_url']
         dic['author'] = rep1['owner']['login']
         rep = requests.get(url+"/commits", headers=headers, verify=False).json()
-        time.sleep(2)
+        time.sleep(1.5)
         dic['html_url'] = rep[0]['html_url']
         commit_date = rep[0]['commit']['committer']['date']
         commit_message = rep[0]['commit']['message']
@@ -72,6 +72,7 @@ def get_github_data(url):
         dic['releases_time'] = "0"
         dic['releases_url'] = "0"
         release_rep = requests.get(url+"/releases", headers=headers, verify=False).json()
+        time.sleep(1.5)
         if release_rep :
             dic['releases'] = release_rep[0]['tag_name']
             dic['releases_time'] = get_timestamp(release_rep[0]['published_at'])
