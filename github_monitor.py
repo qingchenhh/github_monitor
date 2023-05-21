@@ -53,11 +53,13 @@ def get_github_data(url):
     dic = {}
     try:
         rep1 = requests.get(url, headers=headers, verify=False).json()
+        time.sleep(2)
         # print(rep1)
         dic['tools_name'] = rep1['name']
         dic['tools_url'] = rep1['html_url']
         dic['author'] = rep1['owner']['login']
         rep = requests.get(url+"/commits", headers=headers, verify=False).json()
+        time.sleep(2)
         dic['html_url'] = rep[0]['html_url']
         commit_date = rep[0]['commit']['committer']['date']
         commit_message = rep[0]['commit']['message']
