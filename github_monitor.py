@@ -1,15 +1,15 @@
 import sqlite3
-import requests, time, os, json
+import requests, time, os
 import warnings
 warnings.filterwarnings('ignore')
 
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "tools.txt" # 工具列表文件
-github_token = "" # GitHub token
-server_key = "" # server酱的SendKey
-webhook_key="" # 企业微信机器人key
-send_type = "ServerChan" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)
+github_token = "xx" # GitHub token
+server_key = "xx" # server酱的SendKey
+webhook_key="xx" # 企业微信机器人key
+send_type = "Webhook" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)
 # -----------------------------------
 
 def create_db():
@@ -61,8 +61,8 @@ def get_github_data(url):
         dic['html_url'] = rep[0]['html_url']
         commit_date = rep[0]['commit']['committer']['date']
         commit_message = rep[0]['commit']['message']
-        dic['commit_message'] = str(commit_message).replace('#',"%23")
-
+        dic['commit_message'] = str(commit_message)
+        # dic['commit_message'] = str(commit_message).replace('#',"%23")
         # print(tools_name,tools_url,html_url,commit_date,commit_message)
         dic['commit_date_timestamp'] = get_timestamp(commit_date)
 
@@ -102,6 +102,8 @@ def send_server(title,msg):
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36',
                     'Content-Type': "application/json"
                 }
+                msg = msg.replace('更新消息为：', '更新消息为：\n')
+                msg = msg.replace('\n', '\n>')
                 data = {"msgtype": "markdown","markdown": {"content":title + "\n" + ">" + msg}}
                 url = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={}'.format(webhook_key)
                 requests.post(url,headers=headers,json=data,verify=False)
@@ -142,20 +144,20 @@ if __name__ == '__main__':
                 elif (int(query_result[1]) < int(tools_data['commit_date_timestamp'])):
                     if tools_data['releases'] == "0":
                         title = "**" + tools_data['tools_name'] + "**更新啦！"
-                        msg = "工具地址为：" + tools_data['tools_url'] + " ，更新消息为：" + tools_data['commit_message'] + " ，更新详情查看：" + tools_data['html_url'] + " ，工具不存在release版本！"
+                        msg = "工具地址为：" + tools_data['tools_url'] + " ，\n更新消息为：" + tools_data['commit_message'] + " ，\n更新详情查看：" + tools_data['html_url'] + " ，\n工具不存在release版本！"
                         update_sql = "update tools set commit_date_timestamp='{}' where tools_name='{}' and author='{}'".format(tools_data['commit_date_timestamp'],tools_data['tools_name'],tools_data['author'])
                     elif int(query_result[4]) < int(tools_data['releases_time']):
                         title = "**" + tools_data['tools_name'] + "**更新啦！"
-                        msg = "工具地址为：" + tools_data['tools_url'] + " ，更新消息为：" + tools_data['commit_message'] + " ，更新详情查看：" + \
-                              tools_data['html_url'] + " 。工具存在release版本，且版本也更新啦！release最新版本为：" + tools_data[
-                                  'releases'] + " ，下载地址为：" + tools_data['releases_url']
+                        msg = "工具地址为：" + tools_data['tools_url'] + " ，\n更新消息为：" + tools_data['commit_message'] + " ，\n更新详情查看：" + \
+                              tools_data['html_url'] + " ，\n工具存在release版本，且版本也更新啦！release最新版本为：" + tools_data[
+                                  'releases'] + " ，\nrelease版本下载地址为：" + tools_data['releases_url']
                         update_sql = "update tools set commit_date_timestamp='{}',releases='{}',releases_time='{}' where tools_name='{}' and author='{}'".format(
                             tools_data['commit_date_timestamp'], tools_data['releases'], tools_data['releases_time'],
                             tools_data['tools_name'],tools_data['author'])
                     else:
                         title = "**" + tools_data['tools_name'] + "**更新啦！"
-                        msg = "工具地址为：" + tools_data['tools_url'] + " ，更新消息为：" + tools_data['commit_message'] + " ，更新详情查看：" + \
-                              tools_data['html_url'] + " ，工具存在release版本，但release版本未更新！"
+                        msg = "工具地址为：" + tools_data['tools_url'] + " ，\n更新消息为：" + tools_data['commit_message'] + " ，\n更新详情查看：" + \
+                              tools_data['html_url'] + " ，\n工具存在release版本，但release版本未更新！"
                         print(tools_data['commit_date_timestamp'])
                         update_sql = "update tools set commit_date_timestamp='{}' where tools_name='{}' and author='{}'".format(
                             tools_data['commit_date_timestamp'], tools_data['tools_name'], tools_data['author'])
