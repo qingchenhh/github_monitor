@@ -53,8 +53,6 @@ def get_github_data(cve="cve-"):
             print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","获取GitHub API数据时出错啦！报错：", e, url)
 
 def send_server(title,msg):
-    print("===========================")
-    print(update_data)
     if server_key != "":
         try:
             data = {"title":title,"desp":msg}
@@ -88,15 +86,24 @@ if __name__ == '__main__':
         title = "GitHub CVE POC更新监测！"
         msg = ""
         count = 1
+        count_all = 1
         for i in update_data:
             msg += "-------------------------\n"
-            msg += str(count) + ". CVE编号：" + str(i['cve']) + "，\n"
+            msg += str(count_all) + ". CVE编号：" + str(i['cve']) + "，\n"
             msg += "项目名称：" + str(i['p_name']) + "，\n"
             msg += "项目地址：" + str(i['p_url']) + " ，\n"
             msg += "项目描述：" + str(i['p_description']) + "，\n"
             msg += "更新时间：" + str(i['p_pushed_at']) + "。\n"
+            if count == 10:
+                send_server(title,msg)
+                count = 0
+                msg = ""
             count += 1
-        send_server(title,msg)
+            count_all += 1
+        if msg != "":
+            send_server(title, msg)
+    print("===========================")
+    print(update_data)
     end_time = int(time.time())
     print('===========================\n['+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+']程序执行了',(new_date - end_time),'秒\n')
 
