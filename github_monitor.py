@@ -9,7 +9,7 @@ tools_path = "tools.txt" # 工具列表文件
 github_token = "" # GitHub token
 server_key = "" # server酱的SendKey
 webhook_key="" # 企业微信机器人key
-send_type = "Webhook" # 指定推送方式：S erverChan(server酱）、Webhook(企业微信机器人)
+send_type = "Webhook" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)
 # -----------------------------------
 
 list_404 = []
