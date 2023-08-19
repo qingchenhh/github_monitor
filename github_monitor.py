@@ -88,10 +88,10 @@ def get_github_data(url):
             rep_err = requests.get(url, headers=headers, verify=False).json()
             if rep_err['message'] == "Not Found":
                 print("==============ERROR==============")
-                print("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]", "该工具已经404!!!")
+                print("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]", "该项目已经404!!!")
                 print("==============ERROR==============")
                 list_404.append(url)
-                send_server('！！！工具404告警！！！', '发现一个工具已经404，工具连接：' + url)
+                send_server('！！！项目404告警！！！', '发现一个项目已经404，工具地址：' + url.replace('https://api.github.com/repos/','https://github.com/') + "\n监测地址：" + url)
             else:
                 print("==============ERROR==============")
                 print("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]", "获取GitHub API数据时出错啦！报错：", e,
