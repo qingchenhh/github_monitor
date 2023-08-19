@@ -6,12 +6,13 @@ warnings.filterwarnings('ignore')
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "tools.txt" # 工具列表文件
-github_token = "xx" # GitHub token
-server_key = "xx" # server酱的SendKey
-webhook_key="xx" # 企业微信机器人key
-send_type = "Webhook" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)
+github_token = "" # GitHub token
+server_key = "" # server酱的SendKey
+webhook_key="" # 企业微信机器人key
+send_type = "Webhook" # 指定推送方式：S erverChan(server酱）、Webhook(企业微信机器人)
 # -----------------------------------
 
+list_404 = []
 def create_db():
     if os.path.exists('data.db'):
         print('数据库已存在！')
@@ -81,7 +82,22 @@ def get_github_data(url):
         return dic
 
     except Exception as e:
-        print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","获取GitHub API数据时出错啦！报错：", e, url)
+        e_str = str(e)
+        if "<!DOCTYPE html>" not in e_str:
+            # print("["+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+"]","获取GitHub API数据时出错啦！报错：", e, url)
+            rep_err = requests.get(url, headers=headers, verify=False).json()
+            if rep_err['message'] == "Not Found":
+                print("==============ERROR==============")
+                print("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]", "该工具已经404!!!")
+                print("==============ERROR==============")
+                list_404.append(url)
+                send_server('！！！工具404告警！！！', '发现一个工具已经404，工具连接：' + url)
+            else:
+                print("==============ERROR==============")
+                print("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]", "获取GitHub API数据时出错啦！报错：", e,
+                      url)
+                print("==============ERROR==============")
+        return False
 
 def send_server(title,msg):
     print("===========================")
@@ -131,7 +147,11 @@ if __name__ == '__main__':
                 api_url = i.replace('\n','')
                 tools_data = get_github_data(api_url)
                 # 排除工具404和访问异常的情况
-                if tools_data == None:
+                if api_url not in list_404:
+                    tools_data = get_github_data(api_url)
+                    if tools_data == False:
+                        continue
+                else:
                     continue
                 query_sql = "select tools_name,commit_date_timestamp,tools_url,releases,releases_time,author from tools where tools_name='{}' and author='{}'".format(tools_data['tools_name'],tools_data['author'])
                 db.execute(query_sql)
