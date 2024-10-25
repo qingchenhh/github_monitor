@@ -6,9 +6,9 @@ warnings.filterwarnings('ignore')
 # 以下需要配置以下！
 # -----------------------------------
 tools_path = "/root/qingchen/github_monitor/tools.txt" # 工具列表文件
-db = "/root/qingchen/github_monitor/data.db" # 数据库文件存放路径
-github_token = "" # GitHub token
-SendKey="" # 配置使用机器人的key
+db = "/root/qingchen/github_monitor/data.db"
+github_token = "xxx" # GitHub token
+SendKey="xxx" # 配置使用机器人的key
 send_type = "Webhook" # 指定推送方式：ServerChan(server酱）、Webhook(企业微信机器人)、dingding（钉钉机器人）
 # -----------------------------------
 
@@ -165,13 +165,14 @@ if __name__ == '__main__':
             api_url = i.replace('\n','')
 
             # 排除工具已经404的情况
-            query_404 = "select release_is_del from tools where tools_url='{}'".format(api_url.replace('https://api.github.com/repos/','https://github.com/'))
+            query_404 = "select is_del from tools where tools_url='{}'".format(api_url.replace('https://api.github.com/repos/','https://github.com/'))
             db.execute(query_404)
             result_404 = db.fetchall()
             if result_404 != []:
                 result_404 = result_404[0]
                 if result_404[0] == '1':
                     continue
+                    
             # 访问GitHub的api，获取数据
             tools_data = get_github_data(api_url)
             # 排除访问错误情况。
@@ -182,24 +183,28 @@ if __name__ == '__main__':
             elif tools_data == 404:
                 title = "！！！项目404告警！！！"
                 msg = '工具地址：' + api_url.replace('https://api.github.com/repos/','https://github.com/') + " ，\n监测地址：" + api_url
-                update_sql = "update tools set release_is_del='1' where tools_url='{}'".format(api_url.replace('https://api.github.com/repos/','https://github.com/'))
+                update_sql = "update tools set is_del='1' where tools_url='{}'".format(api_url.replace('https://api.github.com/repos/','https://github.com/'))
                 send_server(title, msg)
                 db.execute(update_sql)
                 conn.commit()
                 continue
 
             # 查询并判断
-            query_sql = "select tools_name,commit_date_timestamp,tools_url,releases,releases_time,author from tools where tools_name='{}' and author='{}'".format(tools_data['tools_name'],tools_data['author'])
+            query_sql = "select tools_name,commit_date_timestamp,tools_url,releases,releases_time,author,is_del,release_is_del from tools where tools_name='{}' and author='{}'".format(tools_data['tools_name'],tools_data['author'])
             db.execute(query_sql)
             query_result = db.fetchall()
             if query_result != []:
                 query_result = query_result[0]
+
+            # 数据库中不存在数据，则插入数据。
             if not query_result:
                 print("数据库中不存在" + tools_data['tools_name'] + "工具，将会插入数据！")
                 insert_sql = "insert into tools (tools_name,commit_date_timestamp,tools_url,releases,releases_time,author,is_del,release_is_del) values ('{}','{}','{}','{}','{}','{}','0','0')".format(tools_data['tools_name'],tools_data['commit_date_timestamp'],tools_data['tools_url'],tools_data['releases'],tools_data['releases_time'],tools_data['author'])
                 # print(insert_sql)
                 db.execute(insert_sql)
                 conn.commit()
+
+            # 如果存在则判断工具是否更新。
             elif (int(query_result[1]) < int(tools_data['commit_date_timestamp'])):
                 if tools_data['releases'] == "0":
                     title = "**" + tools_data['tools_name'] + "**更新啦！"
@@ -231,7 +236,7 @@ if __name__ == '__main__':
                 send_server(title, msg)
                 db.execute(update_sql)
                 conn.commit()
-            elif int(query_result[4]) != 0 and int(tools_data['releases_time']) == 0:
+            elif int(query_result[4]) != 0 and int(tools_data['releases_time']) == 0 and query_result[7]=='0':
                 title = "**" + tools_data['tools_name'] + "**工具的release文件被删除！"
                 msg = "该工具release文件被删除，上一个release版本为：" + query_result[3] + " ，项目地址：" + query_result[2]
                 update_sql = "update tools set release_is_del='1' where tools_name='{}' and author='{}'".format(tools_data['tools_name'], tools_data['author'])
